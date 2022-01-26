@@ -1,0 +1,4 @@
+---
+- name: bundle.role
+  src: git+git@github.com:millerjem/bundle.git
+  version: main

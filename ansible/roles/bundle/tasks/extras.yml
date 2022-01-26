@@ -1,0 +1,13 @@
+---
+# tasks file for bundle
+- include_tasks: download.yml
+  with_items: "{{ extra_downloads }}"
+  tags:
+    - extras
+  when: extra_downloads is defined
+
+- include_tasks: docker.yml
+  with_items: "{{ extra_images }}"
+  tags:
+    - extras
+  when: extra_images is defined

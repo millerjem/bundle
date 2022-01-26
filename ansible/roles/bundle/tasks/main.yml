@@ -1,0 +1,46 @@
+---
+# tasks file for bundle
+- include_vars: defaults/main.yml
+- import_tasks: dkp.yml
+- import_tasks: kommander.yml
+- import_tasks: kib.yml
+- import_tasks: registry.yml
+- import_tasks: extras.yml
+- import_tasks: clean.yml
+
+- name: create dkp bundle directory
+  file:
+    path: "{{ bundle.directory }}"
+    state: directory
+
+- name: create bundle archive
+  archive:
+    path: "{{ distribution.directory }}"
+    dest: "{{ bundle.directory }}/{{ bundle.filename }}.tar.gz"
+    format: gz
+    force_archive: true
+  tags:
+    - bundle
+
+- name: generate checksum
+  stat:
+    path: "{{ bundle.directory }}/{{ bundle.filename }}.tar.gz"
+    checksum_algorithm: sha256
+    get_checksum: yes
+  register: register_bundle
+  tags:
+    - sha256
+
+- debug:
+    msg: "Verifing the sha for {{ bundle.filename }} is sha256:{{ register_bundle.stat.checksum }}"
+  when: register_bundle.stat.checksum is defined
+  tags:
+    - sha256
+    
+- local_action:
+    module: copy
+    content: "sha256:{{ register_bundle.stat.checksum }}"
+    dest: "{{ bundle.directory }}/{{ bundle.filename  }}.txt"
+  when: register_bundle.stat.checksum is defined
+  tags:
+    - sha256

@@ -1,0 +1,8 @@
+- name: docker save container image
+  docker_image:
+    name: "{{ item.image }}"
+    tag: "{{ item.version }}"
+    archive_path: "{{ item.location }}/{{ item.filename }}"
+    source: pull
+  tags: 
+    - always

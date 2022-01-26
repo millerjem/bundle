@@ -1,0 +1,26 @@
+---
+- name: clean remove distribution directory
+  file:
+    path: "{{ distribution.directory }}"
+    state: absent
+  tags:
+    - never
+    - clean
+    - cleanall
+
+- name: clean remove downloads directory
+  file:
+    path: "{{ download.directory }}"
+    state: absent
+  tags:
+    - never
+    - clean
+    - cleanall
+
+- name: clean remove bundle
+  file:
+    path: "{{ bundle.directory }}"
+    state: absent
+  tags:
+    - never
+    - cleanall

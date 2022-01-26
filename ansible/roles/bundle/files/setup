@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+readonly KOMMANDER_AIRGAPPED_TAR_FILE=${KOMMANDER_AIRGAPPED_TAR_FILE:-"kommander_image_bundle_v2.1.1_linux_amd64.tar"}
+readonly REGISTRY_URL="$(hostname -I | awk '{print $1}'):5000"
+
+pre_setup() {
+    tar -xvf bootstrap_el7_rpms.tar.gz
+    (cd bootstrap_el7_rpms && yum install -y *.rpm)
+    systemctl enable --now docker
+    groupadd docker
+    usermod -aG docker $SUDO_USER
+}
+
+post_setup() {
+    echo -e ${GREEN}Please log off and on $SUDO_USER to refresh group membership${NC}
+}
+
+seed() {
+
+    AIRGAPPED_TAR_FILE="$@"
+    echo "Loading ${AIRGAPPED_TAR_FILE}"
+    docker load <"${AIRGAPPED_TAR_FILE}"
+
+    while read -r IMAGE; do
+        echo "Processing ${IMAGE}"
+        REGISTRY_IMAGE="$(echo "${IMAGE}" | sed -E "s@^(quay|k8s\.gcr|mcr\.microsoft|us\.gcr|nvcr|gcr|ghcr|docker).(io|com)@${REGISTRY_URL}@")"
+        echo "Tag ${REGISTRY_IMAGE}"
+        docker tag "${IMAGE}" "${REGISTRY_IMAGE}"
+        docker push "${REGISTRY_IMAGE}"
+    done < <(tar xfO "${AIRGAPPED_TAR_FILE}" "index.json" | grep -oP '(?<="io.containerd.image.name":").*?(?=",)')
+
+    echo "Loaded ${AIRGAPPED_TAR_FILE}"
+}
+
+registry_setup() {
+    echo "Setup registry"
+    echo "Adding registry to docker daemon"
+
+	cat <<-EOF | sudo tee /etc/docker/daemon.json
+	{
+		"insecure-registries" : ["$(hostname -I | awk '{print $1}'):5000"]
+	}
+	EOF
+
+    echo "Restarting docker daemon"
+    systemctl restart docker
+
+    # Load the registry image and start it
+    echo "Loading registry iamge"
+    docker load < registry_2.tar
+    echo "Starting registry image"
+    docker run -d --name=registry --restart=always -p 5000:5000 registry:2
+}
+
+preload_bootstrap() {
+    docker load < konvoy-bootstrap_v2.1.1.tar
+}
+
+# Start the process
+if [ $(ps -o comm= -p $(ps -o ppid= -p $$)) = "sudo" ]
+then
+  pre_setup
+  registry_setup
+  preload_bootstrap
+  seed "${KOMMANDER_AIRGAPPED_TAR_FILE}"
+  post_setup
+else
+  echo -e ${GREEN}Please run using sudo ./setup${NC}
+fi

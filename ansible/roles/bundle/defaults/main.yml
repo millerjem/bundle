@@ -1,0 +1,103 @@
+---
+# defaults file for bundle
+os:
+  type: linux
+  arch: amd64
+dkp:
+  version: v2.1.1
+kommander:
+  version: v2.1.1
+kib:
+  version: v1.5.0
+  url: "https://github.com/mesosphere/konvoy-image-builder/releases/download"
+bundle:
+  directory: "~/.dkp/bundles"
+  filename: "dkp_airgapped_bundle_{{ dkp.version }}_{{ os.type }}_{{ os.arch }}"
+distribution:
+  directory: "~/.dkp/dkp-{{ dkp.version }}"
+download:
+  url: https://downloads.d2iq.com
+  directory: "~/.dkp/downloads"
+
+dkp_downloads:
+  - name: dkp
+    url: "{{ download.url }}/konvoy"
+    filename: "dkp_{{ dkp.version }}_{{ os.type }}_{{ os.arch }}.tar.gz"
+    location: "{{ download.directory }}"
+    directory: "{{ distribution.directory }}"
+    sha256: 2f9b8b9b8240ccfdb3bb2b6e184696884efd2cef3dc1cf3db96a32e3bdbc37b4
+  - name: mesosphere/konvoy-bootstrap
+    url: "{{ download.url }}/konvoy/airgapped/{{ dkp.version }}"
+    filename: "konvoy-bootstrap_{{ dkp.version }}.tar"
+    location: "{{ distribution.directory }}"
+    sha256: bb06c9ec92c64cf73eb0ccd51ebaf82363ed323f2205ea4ccdde83730f618e94
+
+kommander_downloads:
+  - name: kommander_catalog_application
+    url: "https://github.com/mesosphere/dkp-catalog-applications/archive/refs/tags"
+    filename: "{{ kommander.version }}.tar.gz"
+    filename_override: "dkp-catalog-applications-{{ kommander.version[-5:] }}.tar.gz"
+    location: "{{ download.directory }}"
+    directory: "{{ distribution.directory }}/dkp-catalog-applications-{{ kommander.version }}"
+    sha256: c3ca4bd7db69b4bdb3f832b55cc71a5fe5a5bf533f314f1e432909921ae6a3a8
+  - name: kommmander_applications
+    url: "{{ download.url }}/dkp"
+    filename: "kommander-applications_{{ kommander.version }}.tar.gz"
+    location: "{{ download.directory }}"
+    directory: "{{ distribution.directory }}/kommander-applications-{{ kommander.version }}"
+    sha256: e2438f9910f99aa03cc06bff2807a2576848598020de9df130421ed5387b77cf
+  - name: kommander_cli_executable
+    url: "{{ download.url }}/dkp"
+    filename: "kommander_{{ kommander.version }}_{{ os.type }}_{{ os.arch }}.tar.gz"
+    location: "{{ download.directory }}"
+    directory: "{{ distribution.directory }}"
+    sha256: 5520ccb2b912c3eada193f1a4b92302bfae6d4e6c79f197ae3db9fff6fbb61a9
+  - name: kommander_image_bundle
+    url: "{{ download.url }}/kommander/airgapped/{{ kommander.version }}"
+    filename: "kommander_image_bundle_{{ dkp.version }}_{{ os.type }}_{{ os.arch }}.tar"
+    location: "{{ distribution.directory }}"
+    sha256: 838876f599eef59558aad89679090490c5da98744b381726870da3818e3a73bd
+
+kib_images:
+  - name: kib_image
+    image: "docker.io/mesosphere/konvoy-image-builder"
+    version: "{{ kib.version }}"
+    filename: "mesosphere_konvoy-image-builder_{{ kib.version }}.tar"
+    location: "{{ distribution.directory }}"
+    sha256: 3916c4fa8d755d146e47ccc9870af77ec867603e49caa8d5ae5f0f754ba609e5
+
+kib_downloads:  
+  - name: os_packages
+    url: "{{ download.url }}/konvoy/airgapped"
+    filename: "os-packages_1.21.6_x86_64_rpms.tar.gz"
+    location: "{{ distribution.directory }}/kib/bundles"
+    sha256: 37617c4efd41edeefbdf2968db6d29e36cbbe74bc37c99641ba3b2f9f6cac514
+  - name: pip_packages
+    url: "{{ download.url }}/konvoy/airgapped"
+    filename: "pip-packages.tar.gz"
+    location: "{{ distribution.directory }}/kib/bundles"
+    sha256: da827a325e9c95a9f15e8db41251777d14e355234bfe2da852cd12d71da79d9e
+  - name: kib_image_bundle
+    url: "{{ kib.url }}/{{ kib.version }}"
+    filename: "konvoy-image-bundle-{{ kib.version }}_{{ os.type }}_{{ os.arch }}.tar.gz"
+    location: "{{ download.directory }}"
+    directory: "{{ distribution.directory }}/kib"
+    sha256: 261e74b0f3a408add33de60b0c014bd653e0bf7b320cace9103ad017529d6604
+  - name: kib_image_bundle_all
+    url: "{{ download.url }}/konvoy/airgapped/{{ dkp.version }}"
+    filename: "konvoy_image_bundle_{{ dkp.version }}_{{ os.type }}_{{ os.arch }}.tar.gz"
+    location: "{{ distribution.directory }}/kib/bundles"
+    sha256: 4ab834c97b64cdd6713f939cd88b59d2d3433fdf952dfd7c4f69397f3d8b6908
+  - name: kubernetes_image_bundle
+    url: "{{ download.url }}/konvoy/airgapped"
+    filename: "kubernetes_image_bundle_v1.21.6_linux_amd64.tar.gz"
+    location: "{{ distribution.directory }}/kib/bundles/images"
+    sha256: 707aa3c0d8b4d51c9c6e92668b75e14248be2c930760c75148a907a4ba9cf8a8
+
+registry_images:
+  - name: registry_image
+    image: "docker.io/registry"
+    version: 2
+    filename: "registry_2.tar"
+    location: "{{ distribution.directory }}"
+    sha256: c9da04dfa3ac2ccb9eb2d81b794b61ff2c56d388a5599f65666bba78a4c9edb8

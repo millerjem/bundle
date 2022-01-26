@@ -1,0 +1,56 @@
+---
+# tasks file for bundle
+- include_tasks: download.yml
+  with_items: "{{ kib_downloads }}"
+  tags:
+    - kib
+
+- include_tasks: docker.yml
+  with_items: "{{ kib_images }}"
+  tags:
+    - kib
+
+- name: generate inventory.yaml
+  shell:
+    cmd: |
+      cat <<-EOF>{{ distribution.directory }}/kib/inventory.yaml
+      all:
+        hosts:
+          $(hostname -I | awk '{print $1}'):
+        vars:
+          ansible_user: maintuser
+          ansible_ssh_private_key_file: cluster-ssh-private-key
+      EOF
+  tags: kib
+
+- name: generate overrides-aws.yaml
+  shell:
+    cmd: |
+      cat <<-EOF>{{ distribution.directory }}/kib/overrides-aws.yaml
+      packer:
+        subnet_id: "subnet-01234567890abcdef"
+        security_group_id: "sg-01234567890abcdef"
+        ssh_keypair_name: "cluster-key-pair"
+      EOF
+  tags: kib
+
+- name: generate overrides-bundles.yaml
+  shell:
+    cmd: |
+      cat <<-EOF>{{ distribution.directory }}/kib/overrides-bundles.yaml
+      os_packages_local_bundle_file: /tmp/kib/bundles/os-packages_1.21.6_x86_64_rpms.tar.gz
+      pip_packages_local_bundle_file: /tmp/kib/bundles/pip-packages.tar.gz
+      images_local_bundle_dir: /tmp/kib/bundles/images/
+      packer:
+        ssh_username: "maintuser"
+      EOF
+  tags: kib
+
+- name: generate overrides-preprovisioned.yaml
+  shell:
+    cmd: |
+      cat <<-EOF>{{ distribution.directory }}/kib/overrides-preprovisioned.yaml
+      packer:
+        ssh_username: "maintuser"
+      EOF
+  tags: kib

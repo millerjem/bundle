@@ -1,0 +1,50 @@
+- name: download create download location directory
+  file:
+    path: "{{ item.location }}"
+    state: directory
+  tags:
+    - always
+
+- name: download create download destination directory
+  file:
+    path: "{{ item.directory }}"
+    state: directory
+  tags:
+    - always
+  when: item.directory is defined
+
+
+- name: download checksum verification
+  stat:
+    path: "{{ item.location }}/{{ item.filename }}"
+    checksum_algorithm: sha256
+    get_checksum: yes
+  register: register_item
+  tags:
+    - always
+
+- debug:
+    msg: "Verifing the sha for {{ item.filename }} is sha256:{{ register_item.stat.checksum }}"
+  when: register_item.stat.checksum is defined
+  tags:
+    - always
+
+- debug: 
+    msg: "Starting download of {{ item.url }}/{{ item.filename }}"
+  when: register_item.stat.exists == false
+  tags:
+    - always
+
+- name: download file
+  get_url: 
+    url: "{{ item.url }}/{{ item.filename }}"
+    dest: "{{ item.location }}"
+  when: register_item.stat.exists == false or register_item.stat.checksum != item.sha256
+  tags:
+    - always
+
+- name: download decompress the archive with filename override
+  shell: "tar -xvf {{ item.location }}/{{ item.filename if item.filename_override is not defined else item.filename_override }} -C {{ item.directory }}"
+  tags:
+    - always
+  when: item.directory is defined

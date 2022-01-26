@@ -1,0 +1,6 @@
+---
+# tasks file for bundle
+- include_tasks: download.yml
+  with_items: "{{ dkp_downloads }}"
+  tags: 
+    - dkp
